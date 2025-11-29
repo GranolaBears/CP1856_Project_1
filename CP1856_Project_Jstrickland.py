@@ -1,16 +1,20 @@
 import random
+import sys
 
-def wager():
-    player_money = 100.00
+def get_wager(player_money):
     while True:
-        player_wager = float(input("How much would you like to bet?: "))
-        if player_wager > player_money:
+        try:
+            wager = float(input("Bet amount: "))
+        except ValueError:
+            print("Please enter a valid number")
+            continue
+        
+        if wager > player_money:
             print("Insufficient funds. Please try again.")
-        elif player_wager <= 0:
+        elif wager <= 0:
             print("Enter a number greater than 0. Please try again.")
         else:
-            player_money -= player_wager
-            break    
+            return wager    
 
 def make_cards():
     suits = ["Diamonds", "Hearts", "Clubs", "Spades"]
@@ -48,26 +52,63 @@ def make_cards():
             deck.append(card)
     return deck
 
-def draw_card(deck, player_hand):
+def draw_card_dealer(deck, dealer_hand):
     draw = random.randint(0, len(deck))
     drawn_card = deck[draw]
     player_hand.append(drawn_card)
     deck.pop(draw)
     
+def draw_card_player(deck, player_hand):
+    draw = random.randint(0, len(deck))
+    drawn_card = deck[draw]
+    player_hand.append(drawn_card)
+    deck.pop(draw)
+
+def write_money(player_money):
+    try:
+        with open("money.txt", "w") as file:
+            file.write(str(player_money))
+    except Exception as e:
+        print(type(e), e)
+        sys.exit()
+
+def read_money():
+    try:
+        with open("money.txt", "r") as file:
+            money = file.read()
+            return float(money)
+    except FileNotFoundError:
+        print("Error: File not found.")
+        sys.exit()
+    except Exception as e:
+        print(type(e), e)
+        sys.exit()
+    
 def main():
     player_hand = []
     dealer_hand = []
+    player_money = read_money()
+    deck = make_cards()
     print("BLACKJACK!")
     print("Blackjack payout is 3:2")
 
-    deck = make_cards()
-    print(deck)
-    draw_card(deck, player_hand)
-    draw_card(deck, player_hand)
-    draw_card(deck, player_hand)
-    draw_card(deck, player_hand)
-    draw_card(deck, player_hand)
-    print(f"Player Hand: {player_hand}")
+    print(f"\nMoney: ${player_money}")
+    wager = get_wager(player_money)
+    player_money -= wager
+    print(f"You've wagered ${wager}")
+
+    win = random.choice([True, False])
+
+    if win:
+        winnings = wager * float(1.5)
+        print(f"You've won ${winnings}")
+        player_money += winnings
+    else:
+        print("You lose :(")
+
+    write_money(player_money)
+    print(f"New balance: ${player_money}")
+
 
 if __name__ == "__main__":
     main()
