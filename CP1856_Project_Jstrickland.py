@@ -1,3 +1,4 @@
+import db
 import random
 import sys
 
@@ -5,9 +6,10 @@ def check_money(player_money):
     if player_money < 5:
         choice = input("Your funds are insufficient. Would you like to purchase more? (Y/N): ").lower()
         if choice == "y":
-            amount = float(input("How many funds would you like to add?:")
+            amount = float(input("How many funds would you like to add?:"))
             player_money += amount
             write_money(player_money)
+        return player_money
 
 def get_wager(player_money):
     while True:
@@ -65,7 +67,7 @@ def make_cards():
 def draw_card_dealer(deck, dealer_hand):
     draw = random.randint(0, len(deck))
     drawn_card = deck[draw]
-    player_hand.append(drawn_card)
+    dealer_hand.append(drawn_card)
     deck.pop(draw)
     
 def draw_card_player(deck, player_hand):
@@ -74,30 +76,10 @@ def draw_card_player(deck, player_hand):
     player_hand.append(drawn_card)
     deck.pop(draw)
 
-def write_money(player_money):
-    try:
-        with open("money.txt", "w") as file:
-            file.write(str(player_money))
-    except Exception as e:
-        print(type(e), e)
-        sys.exit()
-
-def read_money():
-    try:
-        with open("money.txt", "r") as file:
-            money = file.read()
-            return float(money)
-    except FileNotFoundError:
-        print("Error: File not found.")
-        sys.exit()
-    except Exception as e:
-        print(type(e), e)
-        sys.exit()
-    
 def main():
     player_hand = []
     dealer_hand = []
-    player_money = read_money()
+    player_money = db.read_money()
     deck = make_cards()
     print("BLACKJACK!")
     print("Blackjack payout is 3:2")
@@ -107,6 +89,27 @@ def main():
     player_money -= wager
     print(f"You've wagered ${wager}")
 
+    for i in range(2):
+        draw_card_dealer(deck, dealer_hand)
+    print(f"The dealer has drawn 2 cards, and reveals the {dealer_hand[0][1]} of {dealer_hand[0][0]}.")
+
+    for i in range(2):
+        draw_card_player(deck, player_hand)
+    print(f"\nThe dealer has dealt you the\
+    \n{player_hand[0][1]} of {player_hand[0][0]}\
+    \nand the {player_hand[1][1]} of {player_hand[1][0]}.")
+
+    while True:
+        hit_or_stand = input("Hit or stand?: ").lower()
+        if hit_or_stand == "hit":
+            draw_card_player(deck, player_hand)
+            print("\nYour Hand")
+            for card in player_hand:
+                suit, rank, value = card
+                print(f"{rank} of {suit}")
+        else:
+            continue
+    
     win = random.choice([True, False])
 
     if win:
@@ -116,7 +119,7 @@ def main():
     else:
         print("You lose :(")
 
-    write_money(player_money)
+    db.write_money(player_money)
     print(f"New balance: ${player_money}")
 
 
@@ -144,5 +147,11 @@ Gameplay --
         b. Exceeding 21 is an automatic loss.
 '''
 
-
+''' TODO --
+    1. Implement gameplay.
+        c. hit or stand mechanic.
+        d. bust
+        e. compare hands
+        f. win or lose
+'''
            
