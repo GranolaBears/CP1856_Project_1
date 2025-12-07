@@ -1,3 +1,5 @@
+import sys
+
 def write_money(player_money):
     try:
         with open("money.txt", "w") as file:

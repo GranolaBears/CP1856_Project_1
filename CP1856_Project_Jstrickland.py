@@ -30,24 +30,38 @@ def get_wager(player_money):
 
 def do_hit_or_stand(deck, player_hand):
     answer = input("Hit or stand?: ").lower()
-        if answer == "hit":
-            draw_card_player(deck, player_hand)
-            print("\nYour Hand")
-            for card in player_hand:
-                suit, rank, value = card
-                print(f"{rank} of {suit}")
-        elif answer == "stand":
-            return "stand"
-        else:
-            print("Invalid input. Please type 'hit' or 'stand'.")
+    if answer == "hit":
+        draw_card_player(deck, player_hand)
+        print(f"You've been dealt the {player_hand[-1][1]} of {player_hand[-1][0]}")
+        print("\nYour Hand")
+        for card in player_hand:
+            suit, rank, value = card
+            print(f"{rank} of {suit}")
+    elif answer == "stand":
+        return "stand"
+    else:
+        print("Invalid input. Please type 'hit' or 'stand'.")
+
+def win(wager, player_money):
+    winnings = wager * float(1.5)
+    print(f"You've won ${winnings}")
+    player_money += winnings
+
+def compare_hands(player_total, dealer_total):
+    if player_total > dealer_total:
+        return "win"
+    elif player_total < dealer_total:
+        return "lose"
+    elif player_total == dealer_total:
+        return "tie"
 
 def check_total_player(player_hand):
-    total = sum(row[2] for row in player_hand):
-        return total
+    total = sum(row[2] for row in player_hand)
+    return total
 
 def check_total_dealer(dealer_hand):
-    total = sum(row[2] for row in dealer_hand):
-        return total
+    total = sum(row[2] for row in dealer_hand)
+    return total
 
 def make_cards():
     suits = ["Diamonds", "Hearts", "Clubs", "Spades"]
@@ -86,107 +100,104 @@ def make_cards():
     return deck
 
 def draw_card_dealer(deck, dealer_hand):
-    draw = random.randint(0, len(deck))
+    draw = random.randint(0, len(deck)-1)
     drawn_card = deck[draw]
     dealer_hand.append(drawn_card)
     deck.pop(draw)
     
 def draw_card_player(deck, player_hand):
-    draw = random.randint(0, len(deck))
+    draw = random.randint(0, len(deck)-1)
     drawn_card = deck[draw]
     player_hand.append(drawn_card)
     deck.pop(draw)
 
-def main():
-    player_hand = []
-    
-    dealer_hand = []
-    dealer_total = check_dealer_total(dealer_heand)
-    player_money = db.read_money()
-    deck = make_cards()
-    print("BLACKJACK!")
-    print("Blackjack payout is 3:2")
-
-    print(f"\nMoney: ${player_money}")
-    wager = get_wager(player_money)
-    player_money -= wager
-    print(f"You've wagered ${wager}")
-
-    for i in range(2):
-        draw_card_dealer(deck, dealer_hand)
-    print(f"The dealer has drawn 2 cards, and reveals the {dealer_hand[0][1]} of {dealer_hand[0][0]}.")
-
-    for i in range(2):
-        draw_card_player(deck, player_hand)
-    print(f"\nThe dealer has dealt you the\
-    \n{player_hand[0][1]} of {player_hand[0][0]}\
-    \nand the {player_hand[1][1]} of {player_hand[1][0]}.")
-
+def dealer(dealer_hand, deck, player_total, wager, player_money):
+    print(f"The dealer shows their other card, the {dealer_hand[1][1]} of {dealer_hand[1][0]}.")
     while True:
-        hit_or_stand = do_hit_or_stand()
-        player_total = check_total_player(player_hand)
-        if player_total > 21:
-            print("Bust! Sorry, you lose.")
-        else:
-            continue
-
-        if hit_or_stand == "stand":
+        dealer_total = check_total_dealer(dealer_hand)
+        if dealer_total > 21:
+            print("Dealer bust! Congratulations, you've won this round!")
+            win(wager, player_money)
             break
-        
-
-    '''while True:
-        hit_or_stand = input("Hit or stand?: ").lower()
-        if hit_or_stand == "hit":
-            draw_card_player(deck, player_hand)
-            print("\nYour Hand")
-            for card in player_hand:
+        elif dealer_total < 17:
+            draw_card_dealer(deck, dealer_hand)
+            print(f"The dealer drew the {dealer_hand[-1][1]} of {dealer_hand[-1][0]}")
+            print("\nDealer's Hand")
+            for card in dealer_hand:
                 suit, rank, value = card
                 print(f"{rank} of {suit}")
         else:
-            continue'''
+            compare = compare_hands(player_total, dealer_total)
+            if compare == "win":
+                print("Congratulations, you've beaten the dealer!")
+                win(wager, player_money)
+            elif compare == "lose":
+                print("Sorry, the dealer wins this round. You lose!")
+            elif compare == "tie":
+                print("It's a tie! Wagers returned.")
+                player_money += wager
+                db.write_money(player_money)
+            break
+    return player_money
+
+def main():
+    player_money = db.read_money()
     
-    win = random.choice([True, False])
+    while True:
+        player_hand = [] 
+        dealer_hand = []
+        deck = make_cards()
+        
+        print("BLACKJACK!")
+        print("Blackjack payout is 3:2")
+        print(f"\nMoney: ${player_money}")
 
-    if win:
-        winnings = wager * float(1.5)
-        print(f"You've won ${winnings}")
-        player_money += winnings
-    else:
-        print("You lose :(")
+        wager = get_wager(player_money)
+        player_money -= wager
+        print(f"You've wagered ${wager}")
 
-    db.write_money(player_money)
-    print(f"New balance: ${player_money}")
+        for i in range(2):
+            draw_card_dealer(deck, dealer_hand)
+        print(f"The dealer has drawn 2 cards, and reveals the {dealer_hand[0][1]} of {dealer_hand[0][0]}.")
 
+        for i in range(2):
+            draw_card_player(deck, player_hand)
+        print(f"\nThe dealer has dealt you the\
+        \n{player_hand[0][1]} of {player_hand[0][0]}\
+        \nand the {player_hand[1][1]} of {player_hand[1][0]}.")
+
+        while True:
+            hit_or_stand = do_hit_or_stand(deck, player_hand)
+            player_total = check_total_player(player_hand)
+            
+            if hit_or_stand == "stand":
+                break
+
+            if player_total > 21:
+                print("Bust! Your total is higher than 21... Sorry, you lose.")
+                break
+            
+        if player_total <= 21:
+            dealer(dealer_hand, deck, player_total, wager, player_money)
+        else:
+            db.write_money(player_money)
+            
+            
+        db.write_money(player_money)
+        print(f"New balance: ${player_money}")
+        play_again = input("Would you like to play again? (Y/N): ").lower()
+        if play_again != "y":
+            print("Thanks for playing! Bye!")
+            break
 
 if __name__ == "__main__":
     main()
 
 
-'''
-Gameplay --
-    1. Player bets an amount of money at the start of the game.
-        a. Set player money at the beginning of the game and carry it throughout.
-        b. If the player loses, they lose that amount. If they win they get back 1.5x the amount.
-
-    2. Get cards
-        a. Dealer gets TWO cards at the start. One is revealed and one is hidden.
-           The dealer's turn occurs after the player's turn, then they show the other card.
-        b. Dealer also has to hit (draw) if their hand total is less than 16. Dealer
-           must stand (stop) on any total of 17 or higher.
-
-    3. Hit or Stand
-        a. Player chooses to hit or stand each turn.
-
-    4. Win or Lose
-        a. Get a higher total than the dealer to win.
-        b. Exceeding 21 is an automatic loss.
-'''
-
 ''' TODO --
     1. Implement gameplay.
-        c. hit or stand mechanic.
-        d. bust
-        e. compare hands
-        f. win or lose
+        h. Ace can be 1 or 11
+
+    2. Tidy up prints
 '''
            
