@@ -26,7 +26,28 @@ def get_wager(player_money):
         elif wager > 1000:
             print("Maximum bet is $1,000. Please enter a valid number less than 1000.")
         else:
-            return wager    
+            return wager
+
+def do_hit_or_stand(deck, player_hand):
+    answer = input("Hit or stand?: ").lower()
+        if answer == "hit":
+            draw_card_player(deck, player_hand)
+            print("\nYour Hand")
+            for card in player_hand:
+                suit, rank, value = card
+                print(f"{rank} of {suit}")
+        elif answer == "stand":
+            return "stand"
+        else:
+            print("Invalid input. Please type 'hit' or 'stand'.")
+
+def check_total_player(player_hand):
+    total = sum(row[2] for row in player_hand):
+        return total
+
+def check_total_dealer(dealer_hand):
+    total = sum(row[2] for row in dealer_hand):
+        return total
 
 def make_cards():
     suits = ["Diamonds", "Hearts", "Clubs", "Spades"]
@@ -78,7 +99,9 @@ def draw_card_player(deck, player_hand):
 
 def main():
     player_hand = []
+    
     dealer_hand = []
+    dealer_total = check_dealer_total(dealer_heand)
     player_money = db.read_money()
     deck = make_cards()
     print("BLACKJACK!")
@@ -100,6 +123,18 @@ def main():
     \nand the {player_hand[1][1]} of {player_hand[1][0]}.")
 
     while True:
+        hit_or_stand = do_hit_or_stand()
+        player_total = check_total_player(player_hand)
+        if player_total > 21:
+            print("Bust! Sorry, you lose.")
+        else:
+            continue
+
+        if hit_or_stand == "stand":
+            break
+        
+
+    '''while True:
         hit_or_stand = input("Hit or stand?: ").lower()
         if hit_or_stand == "hit":
             draw_card_player(deck, player_hand)
@@ -108,7 +143,7 @@ def main():
                 suit, rank, value = card
                 print(f"{rank} of {suit}")
         else:
-            continue
+            continue'''
     
     win = random.choice([True, False])
 
