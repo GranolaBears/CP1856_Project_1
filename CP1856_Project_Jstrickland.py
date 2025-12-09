@@ -6,10 +6,18 @@ def check_money(player_money):
     if player_money < 5:
         choice = input("Your funds are insufficient. Would you like to purchase more? (Y/N): ").lower()
         if choice == "y":
-            amount = float(input("How many funds would you like to add?:"))
+            while True:
+                try:
+                    amount = float(input("How many funds would you like to add?:"))
+                    if amount <= 0:
+                        print("Please enter a number greater than 0.")
+                        continue
+                    break
+                except ValueError:
+                    print("Please enter a vlaid number.")
             player_money += amount
-            write_money(player_money)
-        return player_money
+            db.write_money(player_money)
+    return player_money
 
 def get_wager(player_money):
     while True:
@@ -143,6 +151,7 @@ def dealer(dealer_hand, deck, player_total, wager, player_money):
         if dealer_total > 21:
             print("Dealer bust! Congratulations, you've won this round!")
             win = player_win(wager, player_money)
+            db.write_money(player_money)
             break
         elif dealer_total < 17:
             draw_card_dealer(deck, dealer_hand)
@@ -177,6 +186,7 @@ def main():
         
         print(f"\nMoney: ${player_money}")
 
+        player_money = check_money(player_money)
         wager = get_wager(player_money)
         player_money -= wager
         print(f"You've wagered ${wager}")

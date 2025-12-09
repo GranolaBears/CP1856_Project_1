@@ -14,8 +14,14 @@ def read_money():
             money = file.read()
             return float(money)
     except FileNotFoundError:
-        print("Error: File not found.")
-        sys.exit()
+        default_money = 100.0
+        try:
+            with open("money.txt", "w") as file:
+                file.write(str(default_money))
+            return default_money
+        except Exception as e:
+            print(type(e), e)
+            sys.exit()
     except Exception as e:
         print(type(e), e)
         sys.exit()
